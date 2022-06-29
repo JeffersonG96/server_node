@@ -2,9 +2,14 @@ const express = require('express');
 const path = require('path');
 require('dotenv').config();
 
+//DB Config
+require('./database/config').dbConnection();
 
 //App de Expess
 const app = express();
+
+//Lectura y parseo de body
+app.use(express.json());
 
 //Node server
 const server = require('http').createServer(app);
@@ -15,6 +20,9 @@ require('./sockets/socket.js');
 //path público 
 const publicPath = path.resolve( __dirname, 'public' );
 app.use(express.static(publicPath));
+
+//Me routes
+app.use('/api/login', require('./routes/auth'));
 
 //Port
 server.listen(process.env.PORT, (err) => {
