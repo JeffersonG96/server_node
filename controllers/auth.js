@@ -1,7 +1,8 @@
-const{response} = require('express');
+const{response, json} = require('express');
 const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuario');
 const { generarJWT } = require('../jwt/jwt');
+const Data = require('../models/data_rule');
 
 
 const crearUsuario = async (req, res = response) => {
@@ -11,7 +12,8 @@ const crearUsuario = async (req, res = response) => {
     try {
 
     //Busca email en la base de datos
-    const existeEmail = await Usuario.findOne({ email });  
+    const existeEmail = await Usuario.findOne({ email });
+    console.log(existeEmail);  
     if(existeEmail){ 
         return res.status(400).json({
             ok: false,
@@ -24,8 +26,8 @@ const crearUsuario = async (req, res = response) => {
     //Encriptar contraseña
     const salt = bcrypt.genSaltSync();
     usuario.password = bcrypt.hashSync(password, salt);
-
-    await usuario.save(); //?Grabar en base de datos
+    //Grabar en base de datos
+    await usuario.save();
 
     //Generar JWT
     const token = await generarJWT(usuario.id);
@@ -106,8 +108,46 @@ const renewToken = async(req, res=response) => {
 }
 
 
+//* webhook - EMQX
+const webhook = async (req, res = response) => {
+    
+    console.log("ESte es el token =>", req.headers.token);
+    const data = await req.body;
+
+    // if(req.headers.token != "121212"){
+    //     return res.status(404).json({
+    //         ok: false,
+    //         msg: 'No found'
+    //     }); 
+    // }
+
+    console.log('Webhook - enviado');
+    //*recoge los datos de EMQX 
+
+    const splittedTopic = data.topic.split("/");
+    const dId = splittedTopic[1]
+    const variable = splittedTopic[2];
+    console.log(data);
+
+    await Data.create({
+            userId: data.userId,
+            dId: dId,
+            variable: variable,
+            value: data.payload.value,
+            time: Date.now()
+        });
+    
+    res.json({
+        ok: true,
+        msg: 'Alarma enviada'
+    });
+
+}
+
+
 module.exports = {
     crearUsuario,
     login,
-    renewToken
+    renewToken,
+    webhook
 }
