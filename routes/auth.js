@@ -5,7 +5,7 @@
 const {Router} = require('express');
 const {check} = require('express-validator'); 
 
-const {crearUsuario, login, renewToken, webhook} = require('../controllers/auth');
+const {crearUsuario, login, renewToken, webhook, getMqttCredentials} = require('../controllers/auth');
 const createAlarmRule = require('../emqx/alarms');
 const { findId } = require('../emqx/find_Id');
 const { validarCampos } = require('../middlewares/validar-campos');
@@ -34,7 +34,11 @@ router.post('/alarm-webhook', webhook);
 // router.post('/saver-webhook', createAlarmRule);
 //find
 router.post('/find',findId);
-//postman test
+
+
+//*Get MQTT Credentials
+
+
 
 
 

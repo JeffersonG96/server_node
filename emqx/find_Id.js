@@ -2,6 +2,7 @@ const { response } = require("express");
 const axios  = require('axios');
 const Usuario = require('../models/usuario');
 const saverRule = require('./saver_rule');
+const EmqxAuthRule = require('../models/emqx_auth');
 
 global.saverResource=null;
 global.alarmResource=null;
@@ -29,35 +30,48 @@ const findId = async(req, res=response ) => {
 try {
     const existeId = await Usuario.findById({_id});
     const ruleId = await saverRule.findOne({ userId});
-
+    
     if(existeId && ruleId){
         console.log('****YA EXISTE REGLA EN ESTE USUARIO******');
-        res.json({
+        
+        const userId = _id
+
+        const credentials = await getUserMqttCredentials(userId);
+
+        const toSend = {
             ok: true,
-            msg: 'La regla esta creada para este usuario',
-        });
-        return;
+            username: credentials.username,
+            password: credentials.password,
+            uid: userId
+        }
+        
+        return res.json(toSend);
 
-    } else {
+    } 
 
-        const caract = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const long = caract.length;
+    else if(existeId){
+        //*Crear Regla en EMQX
+        createSaverRule(_id,true);
+        console.log('***/**CREO UNA REGLA**/***');
 
-        let resul = [];
-        for(let i =0; i<8; i++){
-            resul[i] = caract.charAt(Math.floor(Math.random() * long));
+        //*responder 
+        const userId = _id
+
+        const credentials = await getUserMqttCredentials(userId);
+
+        const toSend = {
+            ok: true,
+            username: credentials.username,
+            password: credentials.password,
+            uid: userId
         }
 
-        const dId = resul.join('');
-
-        //*Crear Regla en EMQX
-        createSaverRule(_id,dId,true);
-        console.log('***/**CREO UNA REGLA**/***');
-        res.json({
-            ok: true,
-            msg: 'Regla creada correctamente'
-        });
+        return res.json(toSend);
     }
+    return res.status(401).json({
+        ok: false,
+        msg: 'No autorizado'
+    });
 
 } catch (error) {
     console.log(error);
@@ -73,14 +87,13 @@ try {
 
 
 //crea la regla
-async function createSaverRule(userId, dId, status) {
+async function createSaverRule(userId, status) {
 
     try {
 
     const url = "http://192.168.100.149:8085/api/v4/rules";
 
-    const topic = userId + "/" + dId + "/+/sdata";
-
+    const topic = userId + "/+/sdata";
     const rawsql ="SELECT topic, payload FROM \"" + topic + "\" WHERE payload.save = 1";
 
     var newRule = {
@@ -105,7 +118,6 @@ async function createSaverRule(userId, dId, status) {
 
         await saverRule.create({
             userId: userId,
-            dId: dId,
             emqxRuleId: res.data.data.id,
             status: status
         });
@@ -153,7 +165,7 @@ try {
                 global.saverResource=resource;
                 // console.log(global.saverResource.id);
                 console.log('**!!**SAVER RESOURCE**!!**');
-                console.log(global.saverResource);
+                // console.log(global.saverResource);
             }
 
         });
@@ -231,7 +243,67 @@ async function createResource() {
 
     }//createResource
 
+//*BASE
+async function getUserMqttCredentials(userId){
 
+ try {
+
+    var rule = await EmqxAuthRule.find({type: "user", userId: userId});
+
+    if(rule.length == 0){
+
+    const newRule = {
+    userId: userId,
+    username: makeid(10),
+    password: makeid(10),
+    publish: [userId + "/#"],
+    subscribe: [userId + "/#"],
+    type: "user",
+    time: Date.now(),
+    updateTime: Date.now()
+        }
+    
+    const result = await EmqxAuthRule.create(newRule); 
+    
+    const toReturn = {
+    username: result.username,
+    password: result.password,    
+    }
+
+    return toReturn;
+
+    }
+
+    const newUserName = makeid(10);
+    const newPassword = makeid(10);
+
+    const result = await EmqxAuthRule.updateOne({type: "user", userId: userId}, {$set: {username: newUserName, password: newPassword, updateTime: Date.now()}})
+    if (result.modifiedCount == 1 && result.matchedCount == 1){
+        return {
+            username: newUserName,
+            password: newPassword
+        }
+    } else {
+        return false;
+    }       
+    } catch (error) {
+        console.log(error);
+        return false;        
+    } 
+
+}
+
+
+function makeid(length) {
+    var result = "";
+    const caract = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const long = caract.length;
+    let resul = [];
+    for(let i =0; i<length; i++){
+        result += caract.charAt(Math.floor(Math.random() * long));
+    }
+    return result;
+}
 
 
 module.exports = {

@@ -5,6 +5,7 @@ const { generarJWT } = require('../jwt/jwt');
 const Data = require('../models/data_rule');
 
 
+
 const crearUsuario = async (req, res = response) => {
 
     const { email, password } = req.body;
@@ -143,6 +144,10 @@ const webhook = async (req, res = response) => {
     });
 
 }
+
+
+
+
 
 
 module.exports = {
