@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuario');
 const { generarJWT } = require('../jwt/jwt');
 const Data = require('../models/data_rule');
+const dataAlarm = require('../models/data_alarm_rule');
 
 
 
@@ -115,30 +116,22 @@ const webhook = async (req, res = response) => {
     console.log("ESte es el token =>", req.headers.token);
     const data = await req.body;
 
-    // if(req.headers.token != "121212"){
-    //     return res.status(404).json({
-    //         ok: false,
-    //         msg: 'No found'
-    //     }); 
-    // }
-
     console.log('Webhook - enviado');
     //*recoge los datos de EMQX 
 
     const splittedTopic = data.topic.split("/");
-    const dId = splittedTopic[1]
-    const variable = splittedTopic[2];
+    console.log(splittedTopic);
+    const variable = splittedTopic[1];
     console.log(data);
 
     await Data.create({
             userId: data.userId,
-            dId: dId,
             variable: variable,
             value: data.payload.value,
             time: Date.now()
         });
     
-    res.json({
+    return res.json({
         ok: true,
         msg: 'Alarma enviada'
     });
@@ -146,13 +139,38 @@ const webhook = async (req, res = response) => {
 }
 
 
+//*alarma
+const alarmwebhook = async(req, res = response) => {
+    console.log('ALARMA RECIBIDA');
+
+    const data = await req.body;
+
+    //*recoge los datos de EMQX 
+    const splittedTopic = data.topic.split("/");
+    console.log(splittedTopic);
+    const variable = splittedTopic[1];
+    console.log(data);
+
+    await dataAlarm.create({
+            userId: data.userId,
+            variable: variable,
+            value: data.payload.value,
+            time: Date.now()
+        });
+    
+    return res.json({
+        ok: true,
+        msg: 'Alarma recibida'
+    });
 
 
-
+    //TODO crear condición para enviar notificación de alarma
+}
 
 module.exports = {
     crearUsuario,
     login,
     renewToken,
-    webhook
+    webhook,
+    alarmwebhook
 }

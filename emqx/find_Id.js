@@ -2,6 +2,7 @@ const { response } = require("express");
 const axios  = require('axios');
 const Usuario = require('../models/usuario');
 const saverRule = require('./saver_rule');
+const alarmRule = require('./alarm_rule');
 const EmqxAuthRule = require('../models/emqx_auth');
 
 global.saverResource=null;
@@ -30,8 +31,9 @@ const findId = async(req, res=response ) => {
 try {
     const existeId = await Usuario.findById({_id});
     const ruleId = await saverRule.findOne({ userId});
+    const ruleAlarmId = await alarmRule.findOne({ userId});
     
-    if(existeId && ruleId){
+    if(existeId && ruleId && ruleAlarmId){
         console.log('****YA EXISTE REGLA EN ESTE USUARIO******');
         
         const userId = _id
@@ -52,6 +54,7 @@ try {
     else if(existeId){
         //*Crear Regla en EMQX
         createSaverRule(_id,true);
+        createAlarmRule(_id,true);
         console.log('***/**CREO UNA REGLA**/***');
 
         //*responder 
@@ -86,7 +89,7 @@ try {
 }
 
 
-//crea la regla
+//crea la saver rule
 async function createSaverRule(userId, status) {
 
     try {
@@ -102,7 +105,7 @@ async function createSaverRule(userId, status) {
             {
             name: "data_to_webserver",
             params: {
-                $resource: global.alarmResource.id,
+                $resource: global.saverResource.id,
                 payload_tmpl: '{"userId": "' + userId + '","payload":${payload}, "topic":"${topic}"  }'
             }
         }
@@ -135,6 +138,53 @@ async function createSaverRule(userId, status) {
 }
 
 /////////////////////////////////////////
+
+async function createAlarmRule(userId, status){
+
+    try {
+
+    const url = "http://192.168.100.149:8085/api/v4/rules";
+
+    const topic = userId + "/+/sdata";
+    const rawsql ="SELECT topic, payload FROM \"" + topic + "\" WHERE payload.alarm = 1";
+
+    var newRule = {
+        rawsql: rawsql,
+        actions: [
+            {
+            name: "data_to_webserver",
+            params: {
+                $resource: global.alarmResource.id,
+                payload_tmpl: '{"userId": "' + userId + '","payload":${payload}, "topic":"${topic}"  }'
+            }
+        }
+    ],
+    description: "SAVER-RULE",
+    enabled: status
+    };
+
+    //*Guardar regla en emqx
+    const res = await axios.post(url, newRule, auth);
+    if(res.status === 200 && res.data.data){
+        console.log(res.data.data);
+
+        await alarmRule.create({
+            userId: userId,
+            emqxRuleId: res.data.data.id,
+            status: status
+        });
+        return true;
+    } else {
+        return false;
+    }
+
+} catch (error) {
+    console.log(error);
+    console.log('No se pudo crear alarm rule');
+    return false;
+}
+}
+
 
 async function listResource() {
 
@@ -254,8 +304,8 @@ async function getUserMqttCredentials(userId){
 
     const newRule = {
     userId: userId,
-    username: makeid(10),
-    password: makeid(10),
+    username: makeid(15),
+    password: makeid(15),
     publish: [userId + "/#"],
     subscribe: [userId + "/#"],
     type: "user",
@@ -274,18 +324,29 @@ async function getUserMqttCredentials(userId){
 
     }
 
-    const newUserName = makeid(10);
-    const newPassword = makeid(10);
+    const getUsername = await  EmqxAuthRule.findOne({ userId});
 
-    const result = await EmqxAuthRule.updateOne({type: "user", userId: userId}, {$set: {username: newUserName, password: newPassword, updateTime: Date.now()}})
-    if (result.modifiedCount == 1 && result.matchedCount == 1){
-        return {
-            username: newUserName,
-            password: newPassword
-        }
-    } else {
-        return false;
-    }       
+    return {
+        username: getUsername.username,
+        password: getUsername.password,
+    }
+
+//actualiza contraseña
+    // const newUserName = makeid(10);
+    // const newPassword = makeid(10);
+
+    // const result = await EmqxAuthRule.updateOne({type: "user", userId: userId}, {$set: {username: newUserName, password: newPassword, updateTime: Date.now()}})
+    // if (result.modifiedCount == 1 && result.matchedCount == 1){
+    //     return {
+    //         username: newUserName,
+    //         password: newPassword
+    //     }
+    // } else {
+    //     return false;
+    // }  
+
+
+
     } catch (error) {
         console.log(error);
         return false;        

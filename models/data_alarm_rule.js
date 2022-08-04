@@ -1,18 +1,11 @@
 const { Schema, model } = require('mongoose');
 
-const DataSchema = Schema({
+const dataAlarmSchema = Schema({
     userId: {type: String, require: [true]},
-    dId: {type: String, require: [true]},
-    emqxRuleId: {type: String, require: [true]},
-    variableFullName: {type: String},
-    variable: {type: String},
-    value: {type: Number},
-    condition: {type: String},
-    triggerTime: {type: Number},
-    status: {type: Boolean},
-    counter: {type: Number, default:0}, 
-    time: {type: Number}
+    variable: {type: String, require: [true]},
+    value: {type: Number, require: [true]},
+    time: {type: Number, require: [true]}
 });
 
 
-module.exports = model('Data', DataSchema );
+module.exports = model('dataAlarm', dataAlarmSchema );

@@ -1,7 +1,6 @@
-
 const { Schema, model } = require('mongoose');
 
-const saverRuleSchema = Schema({
+const alarmRuleSchema = Schema({
     userId: {type: String, require: [true]},
     dId: {type: String, require: [true]},
     emqxRuleId: {type: String, require: [true]},
@@ -9,4 +8,4 @@ const saverRuleSchema = Schema({
 });
 
 
-module.exports= model('saverRule', saverRuleSchema );
+module.exports= model('alarmRule', alarmRuleSchema );
