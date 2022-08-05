@@ -4,7 +4,7 @@ const axios  = require('axios');
 const auth = {
     auth: {
         username: 'admin',
-        password: 'jg0411'
+        password: process.env.EMQX_DEFAULT_APPLICATION_SECRET
     }
 };
 

@@ -1,10 +1,10 @@
 const mongoose  = require('mongoose');
 
-const mongoUserName = "jeffersong";
-const mongoPassword = "jg0411";
-const mongoHost = "192.168.100.149";
-const mongoPort = "27017";
-const mongoDatabase = "proyect";
+const mongoUserName = process.env.MONGO_USERNAME;
+const mongoPassword = process.env.MONGO_PASSWORD;
+const mongoHost = process.env.LOCALHOST;
+const mongoPort = process.env.MONGO_PORT;
+const mongoDatabase = process.env.MONGO_DATABASE;
 
 var uri = "mongodb://" + mongoUserName + ":" + mongoPassword + "@" + mongoHost + ":" + mongoPort + "/" + mongoDatabase;
 

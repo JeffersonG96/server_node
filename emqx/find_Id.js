@@ -12,7 +12,7 @@ const auth = {
     auth: {
         // nombre: 'emqx_api',
         username: 'admin',
-        password: 'jg0411'
+        password: process.env.EMQX_DEFAULT_APPLICATION_SECRET
     }
 };
 
@@ -94,7 +94,7 @@ async function createSaverRule(userId, status) {
 
     try {
 
-    const url = "http://192.168.100.149:8085/api/v4/rules";
+    const url = "http://" + process.env.EMQX_API_RULE +"/api/v4/rules";
 
     const topic = userId + "/+/sdata";
     const rawsql ="SELECT topic, payload FROM \"" + topic + "\" WHERE payload.save = 1";
@@ -143,7 +143,7 @@ async function createAlarmRule(userId, status){
 
     try {
 
-    const url = "http://192.168.100.149:8085/api/v4/rules";
+    const url = "http://"+ process.env.EMQX_API_RULE +"/api/v4/rules";
 
     const topic = userId + "/+/sdata";
     const rawsql ="SELECT topic, payload FROM \"" + topic + "\" WHERE payload.alarm = 1";
@@ -190,7 +190,7 @@ async function listResource() {
 
 try {
 
-    const url = "http://192.168.100.149:8085/api/v4/resources/";
+    const url = "http://"+ process.env.EMQX_API_RULE +"/api/v4/resources/";
 
     const res = await axios.get(url, auth);
     const size = res.data.data.length;
@@ -244,13 +244,13 @@ console.log('Error al conectar al conectar con la API EMQX RESOUCE ');
 async function createResource() {
     try {
 
-        const url = "http://192.168.100.149:8085/api/v4/resources"
+        const url = "http://"+ process.env.EMQX_API_RULE +"/api/v4/resources"
 
         const data1 = {
             "type": "web_hook",
             "description": "alarm-webhook",
          "config": {
-            "url": "http://192.168.100.149:3000/api/login/alarm-webhook",
+            "url": "http://"+ process.env.LOCALHOST + ":" + process.env.PORT +"/api/login/alarm-webhook",
             "method": "POST",
             // "headers": {
             //    " token": "121212"
@@ -263,7 +263,7 @@ async function createResource() {
             "type": "web_hook",
             "description": "saver-webhook",
          "config": {
-            "url": "http://192.168.100.149:3000/api/login/saver-webhook",
+            "url": "http://"+ process.env.LOCALHOST + ":" + process.env.PORT +"/api/login/saver-webhook",
             "method": "POST",
             // "headers": {
             //    " token": "121212"
