@@ -44,6 +44,7 @@ try {
             ok: true,
             username: credentials.username,
             password: credentials.password,
+            publish: credentials.publish,
             uid: userId
         }
         
@@ -66,6 +67,7 @@ try {
             ok: true,
             username: credentials.username,
             password: credentials.password,
+            publish: credentials.publish,
             uid: userId
         }
 
@@ -317,7 +319,8 @@ async function getUserMqttCredentials(userId){
     
     const toReturn = {
     username: result.username,
-    password: result.password,    
+    password: result.password,
+    publish: getUsername.publish    
     }
 
     return toReturn;
@@ -329,6 +332,7 @@ async function getUserMqttCredentials(userId){
     return {
         username: getUsername.username,
         password: getUsername.password,
+        publish: getUsername.publish
     }
 
 //actualiza contraseña
