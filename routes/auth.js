@@ -5,7 +5,8 @@
 const {Router} = require('express');
 const {check} = require('express-validator'); 
 
-const {crearUsuario, login, renewToken, webhook, alarmwebhook} = require('../controllers/auth');
+const {crearUsuario, login, renewToken, webhook, receive_deviceId} = require('../controllers/auth');
+const alarma = require('../controllers/firebase');
 const newSubscribe = require('../controllers/subscribe');
 const createAlarmRule = require('../emqx/alarms');
 const { findId } = require('../emqx/find_Id');
@@ -39,10 +40,11 @@ router.post('/subscribe',validarJWT,newSubscribe);
 //webhook - EMQX
 router.post('/saver-webhook', webhook);
 
-//TODO crear ruta para alarma 
-router.post('/alarm-webhook', alarmwebhook);
+//alarma
+router.post('/alarm-webhook', alarma);
 
-
+//receive deviceId
+router.post('/receive-deviceId',validarJWT, receive_deviceId);
 
 //*Get MQTT Credentials
 

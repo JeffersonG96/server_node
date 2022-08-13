@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuario');
 const { generarJWT } = require('../jwt/jwt');
 const Data = require('../models/data_rule');
-const dataAlarm = require('../models/data_alarm_rule');
+const deviceApp = require('../models/deviceId');
 
 
 
@@ -140,31 +140,53 @@ const webhook = async (req, res = response) => {
 
 
 //*alarma
-const alarmwebhook = async(req, res = response) => {
-    console.log('ALARMA RECIBIDA');
+const receive_deviceId = async(req, res = response) => {
 
     const data = await req.body;
+    const deviceId = data.deviceId;
+    const userId = data.uid;
 
-    //*recoge los datos de EMQX 
-    const splittedTopic = data.topic.split("/");
-    console.log(splittedTopic);
-    const variable = splittedTopic[1];
-    console.log(data);
-
-    await dataAlarm.create({
-            userId: data.userId,
-            variable: variable,
-            value: data.payload.value,
-            time: Date.now()
-        });
+    try {
+        var token = await deviceApp.find({type: "user", userId: userId});
     
-    return res.json({
-        ok: true,
-        msg: 'Alarma recibida'
-    });
+        if(token ==0 ) {
+            newDeviceId = {
+                userId: userId,
+                deviceId: deviceId,
+                type: "user",
+                time: Date.now()
+            };
+    
+            const result = await deviceApp.create(newDeviceId);
+            console.log(result);
+            return res.json({
+                ok: true,
+                msg: 'deviceId creado'
+            });
+        }
+        
+        //update new token to device
+        const updatedb = await deviceApp.updateOne({ userId: userId},{ $addToSet: { deviceId: deviceId} })
+        if (updatedb.modifiedCount == 1 && updatedb.matchedCount == 1){
+            return res.json({
+                ok: true,
+                msg: 'Token listo para notificacion (update)'
+            });  
+        } 
+    
+        return res.json({
+            ok: false,
+            msg: 'Dispositivo ya registrado'
+        });
+        
+    } catch (error) {
+        return res.status(404).json({
+            ok: false,
+            msg: 'No found'
+        }); 
+        
+    }
 
-
-    //TODO crear condición para enviar notificación de alarma
 }
 
 module.exports = {
@@ -172,5 +194,5 @@ module.exports = {
     login,
     renewToken,
     webhook,
-    alarmwebhook
+    receive_deviceId
 }
