@@ -122,13 +122,14 @@ const webhook = async (req, res = response) => {
     const splittedTopic = data.topic.split("/");
     console.log(splittedTopic);
     const variable = splittedTopic[1];
-    console.log(data);
+    console.log(data.userId);
+
 
     await Data.create({
             userId: data.userId,
             variable: variable,
             value: data.payload.value,
-            time: Date.now()
+            time: Date.now(),
         });
     
     return res.json({
@@ -145,7 +146,7 @@ const receive_deviceId = async(req, res = response) => {
     const data = await req.body;
     const deviceId = data.deviceId;
     const userId = data.uid;
-
+    
     try {
         var token = await deviceApp.find({type: "user", userId: userId});
     
@@ -156,7 +157,8 @@ const receive_deviceId = async(req, res = response) => {
                 type: "user",
                 time: Date.now()
             };
-    
+            
+            console.log('creado token en db');
             const result = await deviceApp.create(newDeviceId);
             console.log(result);
             return res.json({
@@ -168,11 +170,13 @@ const receive_deviceId = async(req, res = response) => {
         //update new token to device
         const updatedb = await deviceApp.updateOne({ userId: userId},{ $addToSet: { deviceId: deviceId} })
         if (updatedb.modifiedCount == 1 && updatedb.matchedCount == 1){
+            console.log('token device en base de datos');
             return res.json({
                 ok: true,
                 msg: 'Token listo para notificacion (update)'
             });  
         } 
+        console.log('token registrado en base de datos');
     
         return res.json({
             ok: false,

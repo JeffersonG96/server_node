@@ -29,6 +29,7 @@ const findId = async(req, res=response ) => {
     //BUSCAR EN BASE DE DATOS
 
 try {
+
     const existeId = await Usuario.findById({_id});
     const ruleId = await saverRule.findOne({ userId});
     const ruleAlarmId = await alarmRule.findOne({ userId});
@@ -44,7 +45,6 @@ try {
             ok: true,
             username: credentials.username,
             password: credentials.password,
-            publish: credentials.publish,
             uid: userId
         }
         
@@ -52,14 +52,13 @@ try {
 
     } 
 
-    else if(existeId){
         //*Crear Regla en EMQX
         createSaverRule(_id,true);
         createAlarmRule(_id,true);
         console.log('***/**CREO UNA REGLA**/***');
 
         //*responder 
-        const userId = _id
+        
 
         const credentials = await getUserMqttCredentials(userId);
 
@@ -67,16 +66,11 @@ try {
             ok: true,
             username: credentials.username,
             password: credentials.password,
-            publish: credentials.publish,
             uid: userId
         }
 
         return res.json(toSend);
-    }
-    return res.status(401).json({
-        ok: false,
-        msg: 'No autorizado'
-    });
+
 
 } catch (error) {
     console.log(error);
@@ -319,8 +313,7 @@ async function getUserMqttCredentials(userId){
     
     const toReturn = {
     username: result.username,
-    password: result.password,
-    publish: getUsername.publish    
+    password: result.password,  
     }
 
     return toReturn;
@@ -332,7 +325,6 @@ async function getUserMqttCredentials(userId){
     return {
         username: getUsername.username,
         password: getUsername.password,
-        publish: getUsername.publish
     }
 
 //actualiza contraseña

@@ -3,6 +3,7 @@ const{response, json} = require('express');
 const admin = require('firebase-admin');
 const{initializeApp, applicationDefault} = require('firebase-admin/app');
 const deviceApp = require('../models/deviceId');
+const Data = require('../models/data_rule');
 
 function initFirebasApp() {
 initializeApp({
@@ -18,22 +19,43 @@ const alarma = async(req, res = response) => {
 
     //*recoge los datos de EMQX 
     const splittedTopic = data.topic.split("/");
-    const userId = splittedTopic[0];
+    console.log(splittedTopic);
+    const variable = splittedTopic[1];
+    console.log(data);
+    console.log(data.userId);
+
 
     try {
-        const tokenDeviceId = await deviceApp.findOne({userId: userId});
+        const tokenDeviceId = await deviceApp.findOne({userId: data.userId});
 
         var deviceId = tokenDeviceId.deviceId;
-     
-        sendPushNotifications(deviceId);
+        
+        //*Body NOticications
+        if (variable == 'status'){
+            var body = 'Se detecto una caída'
+            sendPushNotifications(deviceId, body);
+        }
+        if (variable == 'temp'){
+            var body = 'Temperatura corporal elevada'
+            sendPushNotifications(deviceId, body);
+        }
+        if (variable == 'heart'){
+            var body = 'Frecuencia cardiaca alterada'
+            sendPushNotifications(deviceId, body);
+        }
+        if (variable == 'spo2'){
+            var body = 'Saturación de oxígeno inestable'
+            sendPushNotifications(deviceId, body);
+        }
+        
     
         //Guarda en mongooo
-        // await dataAlarm.create({
-        //         userId: data.userId,
-        //         variable: variable,
-        //         value: data.payload.value,
-        //         time: Date.now()
-        //     });
+        await Data.create({
+            userId: data.userId,
+            variable: variable,
+            value: data.payload.value,
+            time: Date.now(),
+        });
         
         return res.json({
             ok: true,
@@ -53,12 +75,12 @@ const alarma = async(req, res = response) => {
 
 
 //enviar a un token
-function sendPushNotifications(registerToken){
+function sendPushNotifications(registerToken, body){
     const message = {
         tokens: registerToken,
         notification:{
-            title: 'Es una notificacion',
-            body: 'este es el body'
+            title: 'Alerta',
+            body: body
         }
     }
     sendMessage(message);
@@ -72,6 +94,13 @@ function sendMessage(message){
         console.log('Error al enviar la notificacion', error);
     })
 }
+
+
+// function counterMessage(){
+
+// } 
+
+
 
 module.exports = alarma;
 
