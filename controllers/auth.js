@@ -113,17 +113,20 @@ const renewToken = async(req, res=response) => {
 //* webhook - EMQX
 const webhook = async (req, res = response) => {
     
-    console.log("ESte es el token =>", req.headers.token);
+    if(req.headers.token != "A4xW0$1c56gR3T!kllI09ZX#31"){
+        return res.status(404).json({
+            ok: false,
+            msg: "No found"
+        });
+    }
+    
+    // console.log("ESte es el token =>", req.headers.token);
     const data = await req.body;
-
-    console.log('Webhook - enviado');
+    // console.log('Webhook - enviado');
     //*recoge los datos de EMQX 
-
     const splittedTopic = data.topic.split("/");
     console.log(splittedTopic);
     const variable = splittedTopic[1];
-    console.log(data.userId);
-
 
     await Data.create({
             userId: data.userId,

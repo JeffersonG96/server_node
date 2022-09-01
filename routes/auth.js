@@ -32,7 +32,7 @@ router.post('/', [
 router.get('/renew', validarJWT, renewToken);
 
 //find
-router.post('/find',findId);
+router.post('/find',validarJWT,findId);
 
 //subscribe
 router.post('/subscribe',validarJWT,newSubscribe);

@@ -15,8 +15,16 @@ initFirebasApp();
 ////
 const alarma = async(req, res = response) => {
 
-    const data = await req.body;
+    if(req.headers.token != "A4xW0$1c56gR3T!kllI09ZX#31"){
+        return res.status(404).json({
+            ok: false,
+            msg: "No found"
+        });
+    }
 
+    try {
+
+    const data = await req.body;
     //*recoge los datos de EMQX 
     const splittedTopic = data.topic.split("/");
     console.log(splittedTopic);
@@ -24,8 +32,6 @@ const alarma = async(req, res = response) => {
     console.log(data);
     console.log(data.userId);
 
-
-    try {
         const tokenDeviceId = await deviceApp.findOne({userId: data.userId});
 
         var deviceId = tokenDeviceId.deviceId;

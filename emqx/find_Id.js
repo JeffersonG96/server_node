@@ -18,17 +18,14 @@ const auth = {
 
 const findId = async(req, res=response ) => {
 
+    try {
+        
     listResource();
 
     const uid = req.body;
     const _id = uid.uid;
     const userId = uid.uid;
-    
 
-    // console.log(_id);
-    //BUSCAR EN BASE DE DATOS
-
-try {
 
     const existeId = await Usuario.findById({_id});
     const ruleId = await saverRule.findOne({ userId});
@@ -246,11 +243,11 @@ async function createResource() {
             "type": "web_hook",
             "description": "alarm-webhook",
          "config": {
-            "url": "http://"+ process.env.LOCALHOST + ":" + process.env.PORT +"/api/login/alarm-webhook",
-            "method": "POST",
-            // "headers": {
-            //    " token": "121212"
-            // },
+            url: "http://"+ process.env.LOCALHOST + ":" + process.env.PORT +"/api/login/alarm-webhook",
+            method: "POST",
+            headers: {
+               token: "A4xW0$1c56gR3T!kllI09ZX#31"
+            },
         }
 
         }//data1
@@ -259,11 +256,11 @@ async function createResource() {
             "type": "web_hook",
             "description": "saver-webhook",
          "config": {
-            "url": "http://"+ process.env.LOCALHOST + ":" + process.env.PORT +"/api/login/saver-webhook",
-            "method": "POST",
-            // "headers": {
-            //    " token": "121212"
-            // },
+            url: "http://"+ process.env.LOCALHOST + ":" + process.env.PORT +"/api/login/saver-webhook",
+            method: "POST",
+            headers: {
+               token: "A4xW0$1c56gR3T!kllI09ZX#31"
+            },
         }
 
         }//data2
