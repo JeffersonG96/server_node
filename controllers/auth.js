@@ -2,8 +2,10 @@ const{response, json} = require('express');
 const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuario');
 const { generarJWT } = require('../jwt/jwt');
-const Data = require('../models/data_rule');
 const deviceApp = require('../models/deviceId');
+const DataTemp = require('../models/data_temp');
+const DataHeart = require('../models/data_heart');
+const DataSpo2 = require('../models/data_spo2');
 
 
 
@@ -125,19 +127,37 @@ const webhook = async (req, res = response) => {
     // console.log('Webhook - enviado');
     //*recoge los datos de EMQX 
     const splittedTopic = data.topic.split("/");
-    console.log(splittedTopic);
+    console.log(data);
     const variable = splittedTopic[1];
 
-    await Data.create({
-            userId: data.userId,
-            variable: variable,
-            value: data.payload.value,
-            time: Date.now(),
-        });
+    if(variable == 'temp'){
+        await DataTemp.create({
+                userId: data.userId,
+                variable: variable,
+                value: data.payload.value,
+                time: Date.now(),
+            });
+    }
+    if(variable == 'heart'){
+        await DataHeart.create({
+                userId: data.userId,
+                variable: variable,
+                value: data.payload.value,
+                time: Date.now(),
+            });
+    }
+    if(variable == 'spo2'){
+        await DataSpo2.create({
+                userId: data.userId,
+                variable: variable,
+                value: data.payload.value,
+                time: Date.now(),
+            });
+    }
     
     return res.json({
         ok: true,
-        msg: 'Alarma enviada'
+        msg: 'Data save'
     });
 
 }

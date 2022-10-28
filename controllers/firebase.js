@@ -3,7 +3,9 @@ const{response, json} = require('express');
 const admin = require('firebase-admin');
 const{initializeApp, applicationDefault} = require('firebase-admin/app');
 const deviceApp = require('../models/deviceId');
-const Data = require('../models/data_rule');
+const DataTemp = require('../models/data_temp');
+const DataHeart = require('../models/data_heart');
+const DataSpo2 = require('../models/data_spo2');
 
 function initFirebasApp() {
 initializeApp({
@@ -40,28 +42,44 @@ const alarma = async(req, res = response) => {
         if (variable == 'status'){
             var body = 'Se detecto una caída'
             sendPushNotifications(deviceId, body);
+
         }
         if (variable == 'temp'){
             var body = 'Temperatura corporal elevada'
             sendPushNotifications(deviceId, body);
-        }
-        if (variable == 'heart'){
-            var body = 'Frecuencia cardiaca alterada'
-            sendPushNotifications(deviceId, body);
-        }
-        if (variable == 'spo2'){
-            var body = 'Saturación de oxígeno inestable'
-            sendPushNotifications(deviceId, body);
-        }
-        
-    
         //Guarda en mongooo
-        await Data.create({
+            await DataTemp.create({
             userId: data.userId,
             variable: variable,
             value: data.payload.value,
             time: Date.now(),
-        });
+            });
+        }
+        if (variable == 'heart'){
+            var body = 'Frecuencia cardiaca alterada'
+            sendPushNotifications(deviceId, body);
+
+            //Guarda en mongooo
+            await DataHeart.create({
+            userId: data.userId,
+            variable: variable,
+            value: data.payload.value,
+            time: Date.now(),
+            });
+        }
+        if (variable == 'spo2'){
+            var body = 'Saturación de oxígeno inestable'
+            sendPushNotifications(deviceId, body);
+
+            //Guarda en mongooo
+            await DataSpo2.create({
+            userId: data.userId,
+            variable: variable,
+            value: data.payload.value,
+            time: Date.now(),
+            });
+        }
+        
         
         return res.json({
             ok: true,
