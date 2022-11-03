@@ -6,6 +6,7 @@ const deviceApp = require('../models/deviceId');
 const DataTemp = require('../models/data_temp');
 const DataHeart = require('../models/data_heart');
 const DataSpo2 = require('../models/data_spo2');
+const DataNewAlert = require('../models/data_new_alert');
 
 
 
@@ -154,7 +155,22 @@ const webhook = async (req, res = response) => {
                 time: Date.now(),
             });
     }
-    
+
+    const statusNewAlert = await DataNewAlert.findOne({userId: data.userId}).sort({$natural:-1});
+
+    if(statusNewAlert.status){
+        if(variable == 'temp'){
+            var counter = statusNewAlert.counter + 10; 
+            const result = await DataNewAlert.findOneAndUpdate({userId: data.userId}, {$set: {counter: counter}}, {sort: {_id:-1}});
+            if(counter >= statusNewAlert.range){
+                var counterNumber = 0;
+                const result = await DataNewAlert.findOneAndUpdate({userId: data.userId}, {$set: {counter: counterNumber}}, {sort: {_id:-1}});
+                console.log('ENVIAR NOTIFICACION Y COUNTER = 0 & CREATE DOC');
+            }
+            // console.log(result);
+        }
+    }
+
     return res.json({
         ok: true,
         msg: 'Data save'

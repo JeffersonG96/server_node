@@ -5,10 +5,9 @@
 const {Router} = require('express');
 const {check} = require('express-validator'); 
 
-const {crearUsuario, login, renewToken, webhook, receive_deviceId} = require('../controllers/auth');
-const alarma = require('../controllers/firebase');
+const {crearUsuario, login, renewToken, receive_deviceId} = require('../controllers/auth');
+const {alarma,save} = require('../controllers/firebase');
 const newSubscribe = require('../controllers/subscribe');
-const createAlarmRule = require('../emqx/alarms');
 const { findId } = require('../emqx/find_Id');
 const { validarCampos } = require('../middlewares/validar-campos');
 const { validarJWT } = require('../middlewares/validar-jwt');
@@ -38,7 +37,7 @@ router.post('/find',validarJWT,findId);
 router.post('/subscribe',validarJWT,newSubscribe);
 
 //webhook - EMQX
-router.post('/saver-webhook', webhook);
+router.post('/saver-webhook', save);
 
 //alarma
 router.post('/alarm-webhook', alarma);

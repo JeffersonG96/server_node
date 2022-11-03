@@ -24,6 +24,7 @@ app.use(express.static(publicPath));
 //Me routes
 app.use('/api/login', require('./routes/auth'));
 app.use('/api/datachart', require('./routes/data_chart'));
+app.use('/api/data', require('./routes/data'));
 
 
 
