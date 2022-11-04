@@ -191,7 +191,7 @@ const save = async (req, res = response) => {
         console.log(error);
         console.log('error al guardar dato');
     }
-    }
+}
 
 //enviar a un token
 function sendPushNotifications(registerToken, body){

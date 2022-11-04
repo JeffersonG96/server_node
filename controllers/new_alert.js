@@ -42,6 +42,30 @@ const newAlert = async(req, res = response) => {
 
 }
 
+
+const updateAlert = async (req, res = response) => {
+
+try {    
+    const uId = await req.uid;
+    const body = await req.body;
+
+    await DataNewAlert.findOneAndUpdate({userId: uId}, {$set: {status: body.status}}, {sort: {_id:-1}});
+    const dataHistorial = await DataNewAlert.findOne({userId: uId}).sort({$natural:-1});
+
+    res.json({
+        ok: true,
+        medicalHistory: dataHistorial,
+    });
+
+} catch (e) {
+    console.log(e);
+}
+
+}
+
+
+
 module.exports = {
    newAlert,
+   updateAlert,
 }
